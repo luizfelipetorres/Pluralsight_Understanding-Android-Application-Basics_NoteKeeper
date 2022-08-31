@@ -1,33 +1,31 @@
 package com.example.notekeeper;
 
 import android.os.Bundle;
-
-import com.google.android.material.snackbar.Snackbar;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
 
 import androidx.appcompat.app.AppCompatActivity;
-
-import android.view.View;
-
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
-import com.example.notekeeper.databinding.ActivityMainBinding;
+import com.example.notekeeper.databinding.ActivityNoteBinding;
 
-import android.view.Menu;
-import android.view.MenuItem;
+import java.util.List;
 
 public class NoteActivity extends AppCompatActivity {
 
     private AppBarConfiguration appBarConfiguration;
-    private ActivityMainBinding binding;
+    private ActivityNoteBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        binding = ActivityNoteBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
         setSupportActionBar(binding.toolbar);
@@ -36,19 +34,28 @@ public class NoteActivity extends AppCompatActivity {
         appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
 
-        binding.fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
+        // Referência para o spinner pelo id
+        Spinner spinnerCourses = findViewById(R.id.spinner_courses);
+
+        //Capturando a lista de cursos
+        List<CourseInfo> courses = DataManager.getInstance().getCourses();
+
+        //Criando adaptador para spinner (gerencia layouts e dados)
+        ArrayAdapter<CourseInfo> adapterCourses =
+                new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, courses);
+
+        //Selecionando o tipo padrão de dropdown
+        adapterCourses.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
+        //Settar adaptador no spinner
+        spinnerCourses.setAdapter(adapterCourses);
+
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
+        getMenuInflater().inflate(R.menu.menu_note, menu);
         return true;
     }
 
