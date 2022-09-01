@@ -68,11 +68,11 @@ public class NoteListActivity extends AppCompatActivity {
                 Intent intent = new Intent(NoteListActivity.this, NoteActivity.class);
 
                 // Pegando o item da posição na ListView (listNotes precisa ser final por
-                // estar dentro de uma classe anônima)
-                NoteInfo note = (NoteInfo) listNotes.getItemAtPosition(position);
+                // estar dentro de uma classe anônima). Código comentado depois da refatoração
+                //NoteInfo note = (NoteInfo) listNotes.getItemAtPosition(position);
 
                 // Colocando extra note na intent
-                intent.putExtra(NoteActivity.NOTE_INFO, note);
+                intent.putExtra(NoteActivity.NOTE_POSITION, position);
 
                 //Passando a intent para NoteActivity
                 startActivity(intent);
