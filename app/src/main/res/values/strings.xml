@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Pluralsight_Understanding-Android-Application-Basics_NoteKeeper</string>
+    <string name="app_name">Note Keeper</string>
     <string name="action_settings">Settings</string>
     <!-- Strings used for fragments for navigation -->
     <string name="first_fragment_label">First Fragment</string>
@@ -11,5 +11,5 @@
     <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
     <string name="title_activity_note_list">NoteListActivity</string>
     <string name="title_activity_note">Edit Note</string>
-    <string name="title_note_list_activity">Note Keeper</string>
+
 </resources>

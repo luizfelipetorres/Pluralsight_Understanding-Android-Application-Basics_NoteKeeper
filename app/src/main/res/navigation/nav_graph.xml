@@ -8,7 +8,7 @@
     <fragment
         android:id="@+id/FirstFragment"
         android:name="com.example.notekeeper.FirstFragment"
-        android:label="@string/first_fragment_label"
+        android:label="@string/title_activity_note"
         tools:layout="@layout/fragment_first">
 
         <action
