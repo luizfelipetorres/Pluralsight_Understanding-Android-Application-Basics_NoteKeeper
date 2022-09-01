@@ -14,6 +14,7 @@ import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
 import com.example.notekeeper.databinding.ActivityNoteListBinding;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.List;
 
@@ -35,8 +36,18 @@ public class NoteListActivity extends AppCompatActivity {
         appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
 
+        FloatingActionButton fab = findViewById(R.id.fab);
+        fab.setOnClickListener((view -> {
+            Intent intent = new Intent(NoteListActivity.this, NoteActivity.class);
+            startActivity(intent);
+        }));
+
+        initializeDisplayContent();
+    }
+
+    private void initializeDisplayContent() {
         //Referenciando a listview pelo ID
-        ListView listNotes = findViewById(R.id.list_notes);
+        final ListView listNotes = findViewById(R.id.list_notes);
 
         //Recuperando uma lista de notas
         List<NoteInfo> notes = DataManager.getInstance().getNotes();
@@ -52,8 +63,18 @@ public class NoteListActivity extends AppCompatActivity {
         listNotes.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
-                //Cria a intent da atividade, e depois starta
+
+                //Cria a intent da atividade
                 Intent intent = new Intent(NoteListActivity.this, NoteActivity.class);
+
+                // Pegando o item da posição na ListView (listNotes precisa ser final por
+                // estar dentro de uma classe anônima)
+                NoteInfo note = (NoteInfo) listNotes.getItemAtPosition(position);
+
+                // Colocando extra note na intent
+                intent.putExtra(NoteActivity.NOTE_INFO, note);
+
+                //Passando a intent para NoteActivity
                 startActivity(intent);
 
             }

@@ -3,7 +3,7 @@ package com.example.notekeeper;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-public final class NoteInfo {
+public final class NoteInfo implements Parcelable {
     private CourseInfo mCourse;
     private String mTitle;
     private String mText;
@@ -12,6 +12,15 @@ public final class NoteInfo {
         mCourse = course;
         mTitle = title;
         mText = text;
+    }
+
+    //Construtor privado usado pelo Parcel
+    private NoteInfo(Parcel parcel) {
+
+        //Como mCourse não é primitivo, também precisa implementar Parceable
+        mCourse = parcel.readParcelable(CourseInfo.class.getClassLoader());
+        mTitle = parcel.readString();
+        mText = parcel.readString();
     }
 
     public CourseInfo getCourse() {
@@ -62,4 +71,34 @@ public final class NoteInfo {
         return getCompareKey();
     }
 
+    //Metodos do parcel
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    // Os atributos devem estar na mesma ordem!
+    @Override
+    public void writeToParcel(Parcel parcel, int i) {
+        parcel.writeParcelable(mCourse, 0);
+        parcel.writeString(mTitle);
+        parcel.writeString(mText);
+    }
+
+    //Constante statica púclica do Parceable, implementando uma classe anônima
+    public static final Parcelable.Creator<NoteInfo> CREATOR =
+            new Parcelable.Creator<NoteInfo>() {
+
+                //Criando de um parcel usando o construtor privado
+                @Override
+                public NoteInfo createFromParcel(Parcel parcel) {
+                    return new NoteInfo(parcel);
+                }
+
+                //Criando um array de NoteInfos
+                @Override
+                public NoteInfo[] newArray(int size) {
+                    return new NoteInfo[size];
+                }
+            };
 }

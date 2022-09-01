@@ -1,9 +1,11 @@
 package com.example.notekeeper;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.Spinner;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -18,8 +20,12 @@ import java.util.List;
 
 public class NoteActivity extends AppCompatActivity {
 
+    public static final String NOTE_INFO = "com.example.notekeeper.NOTE_INFO";
+
     private AppBarConfiguration appBarConfiguration;
     private ActivityNoteBinding binding;
+    private NoteInfo mNote;
+    private boolean mIsNewNote;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,8 +40,10 @@ public class NoteActivity extends AppCompatActivity {
         appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
 
-        // Referência para o spinner pelo id
+        // Referência para campos pelo id
         Spinner spinnerCourses = findViewById(R.id.spinner_courses);
+        EditText textNoteTitle = findViewById(R.id.text_note_title);
+        EditText textNoteText = findViewById(R.id.text_note_text);
 
         //Capturando a lista de cursos
         List<CourseInfo> courses = DataManager.getInstance().getCourses();
@@ -50,6 +58,34 @@ public class NoteActivity extends AppCompatActivity {
         //Settar adaptador no spinner
         spinnerCourses.setAdapter(adapterCourses);
 
+        // Ler a intent (seja nova ou não)
+        readDisplayStateValues();
+
+        //Se não foruma nota nova, iniciar a nota já criada
+        if (!mIsNewNote)
+            displayNote(spinnerCourses, textNoteTitle, textNoteText);
+
+
+    }
+
+    private void displayNote(Spinner spinnerCourses, EditText textNoteTitle, EditText textNoteText) {
+
+        // Carregar a lista de cursos do spinner e atribuir o index do curso selecionado
+        List<CourseInfo> courses = DataManager.getInstance().getCourses();
+        int courseIndex = courses.indexOf(mNote.getCourse());
+
+        // Atribuir valores no spinner, text e title
+        spinnerCourses.setSelection(courseIndex);
+        textNoteTitle.setText(mNote.getTitle());
+        textNoteText.setText(mNote.getText());
+    }
+
+    private void readDisplayStateValues() {
+        Intent intent = getIntent();
+        mNote = intent.getParcelableExtra(NOTE_INFO);
+
+        //Se for uma nota nova, mIsNewNote será true
+        mIsNewNote = mNote == null;
     }
 
     @Override
