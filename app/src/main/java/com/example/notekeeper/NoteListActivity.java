@@ -22,6 +22,7 @@ public class NoteListActivity extends AppCompatActivity {
 
     private AppBarConfiguration appBarConfiguration;
     private ActivityNoteListBinding binding;
+    private ArrayAdapter<NoteInfo> mAdapterNotes;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,6 +46,16 @@ public class NoteListActivity extends AppCompatActivity {
         initializeDisplayContent();
     }
 
+    //Metodo usado ao voltar da NoteActivity.
+    @Override
+    protected void onPostResume() {
+        super.onPostResume();
+        mAdapterNotes.notifyDataSetChanged();
+    }
+
+    /**
+     * Inicializa a ListView e seus itens
+     */
     private void initializeDisplayContent() {
         //Referenciando a listview pelo ID
         final ListView listNotes = findViewById(R.id.list_notes);
@@ -53,11 +64,10 @@ public class NoteListActivity extends AppCompatActivity {
         List<NoteInfo> notes = DataManager.getInstance().getNotes();
 
         //Criando adaptador, passando contexto, item pronto do android e a lista de notas
-        ArrayAdapter<NoteInfo> adapterNotes =
-                new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, notes);
+        mAdapterNotes = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, notes);
 
         //Settando adaptador
-        listNotes.setAdapter(adapterNotes);
+        listNotes.setAdapter(mAdapterNotes);
 
         //Definindo o clicklistener com uma classe anônima na interface
         listNotes.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -76,7 +86,6 @@ public class NoteListActivity extends AppCompatActivity {
 
                 //Passando a intent para NoteActivity
                 startActivity(intent);
-
             }
         });
     }

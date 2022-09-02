@@ -8,7 +8,10 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.Spinner;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
@@ -18,13 +21,21 @@ import com.example.notekeeper.databinding.ActivityNoteBinding;
 
 import java.util.List;
 
+
 public class NoteActivity extends AppCompatActivity {
 
+    /**
+     * Salvar a position passada pela intent de NoteListActivity
+     */
     public static final String NOTE_POSITION = "com.example.notekeeper.NOTE_POSITION";
     public static final int POSITION_NOT_SET = -1;
 
     private AppBarConfiguration appBarConfiguration;
     private ActivityNoteBinding binding;
+
+    /**
+     * Armazena as configurações da nota
+     */
     private NoteInfo mNote;
     private boolean mIsNewNote;
     private Spinner mSpinnerCourses;
@@ -32,7 +43,33 @@ public class NoteActivity extends AppCompatActivity {
     private EditText mTextNoteText;
     private int mNotePosition;
     private boolean mIsCancelling;
+    private NoteActivityViewModel mViewModel;
 
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (outState != null)
+            mViewModel.saveState(outState);
+    }
+
+    @Override
+    protected void onPostCreate(@Nullable Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+
+        if (savedInstanceState != null)
+            mViewModel.saveState(savedInstanceState);
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+    }
+
+    /**
+     * Metodo chamado ao criar a activity
+     *
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,6 +78,18 @@ public class NoteActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         setSupportActionBar(binding.toolbar);
+
+        // Definir viewModel para armazenar o estado da activity
+        ViewModelProvider viewModelProvider = new ViewModelProvider(getViewModelStore(),
+                (ViewModelProvider.Factory) ViewModelProvider.AndroidViewModelFactory.getInstance(getApplication()));
+
+        mViewModel = viewModelProvider.get(NoteActivityViewModel.class);
+
+        if (savedInstanceState != null && mViewModel.mIsNewlyCreated)
+            mViewModel.restoreState(savedInstanceState);
+
+
+        mViewModel.mIsNewlyCreated = false;
 
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
         appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
@@ -65,6 +114,7 @@ public class NoteActivity extends AppCompatActivity {
         mSpinnerCourses.setAdapter(adapterCourses);
 
         readDisplayStateValues();
+        saveOriginalNoteValues();
 
         //Se não foruma nota nova, iniciar a nota já criada
         if (!mIsNewNote)
@@ -72,6 +122,24 @@ public class NoteActivity extends AppCompatActivity {
 
     }
 
+    /**
+     * Salvar valores originais da nota (se não for uma nota nova) na instância ViewModel
+     */
+    private void saveOriginalNoteValues() {
+        if (mIsNewNote)
+            return;
+        mViewModel.mOriginalNoteCourseId = mNote.getCourse().getCourseId();
+        mViewModel.mOriginalNoteTitle = mNote.getTitle();
+        mViewModel.mOriginalNoteText = mNote.getText();
+    }
+
+    /**
+     * Atribuir os valores de uma nota existente à activity
+     *
+     * @param spinnerCourses
+     * @param textNoteTitle
+     * @param textNoteText
+     */
     private void displayNote(Spinner spinnerCourses, EditText textNoteTitle, EditText textNoteText) {
 
         // Carregar a lista de cursos do spinner e atribuir o index do curso selecionado
@@ -101,13 +169,21 @@ public class NoteActivity extends AppCompatActivity {
             mNote = DataManager.getInstance().getNotes().get(position);
     }
 
+    /**
+     * Salvar uma nova nota vazia (usado ao clicar no fab)
+     */
     private void createNewNote() {
         DataManager dm = DataManager.getInstance();
         mNotePosition = dm.createNewNote();
         mNote = dm.getNotes().get(mNotePosition);
-
     }
 
+    /**
+     * Método para criação do menu
+     *
+     * @param menu
+     * @return
+     */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -115,6 +191,12 @@ public class NoteActivity extends AppCompatActivity {
         return true;
     }
 
+    /**
+     * Método de seleção de itens do menu
+     *
+     * @param item - Item selecionado
+     * @return boolean
+     */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
@@ -131,29 +213,54 @@ public class NoteActivity extends AppCompatActivity {
             finish();
         }
 
-
         return super.onOptionsItemSelected(item);
     }
 
     // Metodo chamado ao "sair da tela", apertar o botão de voltar, tirar da pilha
+
+    /**
+     * Método de lifecycle chamado ao sair do foreground.
+     * Se cancelar for verdadeiro, verifica se é uma nova nota
+     * Se for uma nova nota, remover
+     * Senão, salvar com informações originais
+     * Senão, salvar nota
+     */
     @Override
     protected void onPause() {
         super.onPause();
         if (mIsCancelling) {
             if (mIsNewNote)
                 DataManager.getInstance().removeNote(mNotePosition);
+            else
+                storePreviousNoteValues();
         } else {
             saveNote();
         }
     }
 
-    // Salvar valores na mNote
+    /**
+     * Salvar os dados originais das notas na instância do ViewModel
+     */
+    private void storePreviousNoteValues() {
+        CourseInfo course = DataManager.getInstance().getCourse(mViewModel.mOriginalNoteCourseId);
+        mNote.setCourse(course);
+        mNote.setTitle(mViewModel.mOriginalNoteTitle);
+        mNote.setText(mViewModel.mOriginalNoteText);
+    }
+
+    /**
+     * Salvar informações das notas em mNote
+     */
     private void saveNote() {
         mNote.setCourse((CourseInfo) mSpinnerCourses.getSelectedItem());
         mNote.setTitle(mTextNoteTitle.getText().toString());
         mNote.setText(mTextNoteText.getText().toString());
+
     }
 
+    /**
+     * Método para montar um e-mail padrão com informações da nota usando implicit intent
+     */
     private void sendEmail() {
         //Pegar os atributos que serão colocados no e-mail
         CourseInfo course = (CourseInfo) mSpinnerCourses.getSelectedItem();
@@ -170,7 +277,6 @@ public class NoteActivity extends AppCompatActivity {
         intent.putExtra(Intent.EXTRA_TEXT, text);
 
         startActivity(intent);
-
     }
 
     @Override
